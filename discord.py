@@ -4,7 +4,7 @@ import http.client
 separator = ", "
 
 
-def build_vehicle_card(v, zip_code):
+def build_vehicle_card(v, search_query):
     desc = f"→ VIN: {v.VIN}\n"
     desc += f"→ Odometer: {str(v.Odometer)} {v.OdometerType}\n"
     desc += f"→ Price: {str(v.Price)}\n"
@@ -12,16 +12,27 @@ def build_vehicle_card(v, zip_code):
     desc += f"→ Exterior: {separator.join(v.PAINT)}\n"
     desc += f"→ Interior: {separator.join(v.INTERIOR)}\n"
     desc += f"→ Additional Options: {separator.join(v.ADL_OPTS)}\n"
-    desc += f"→ Location: {v.City}, {v.StateProvince}"
+    desc += f"→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
 
     card = {
         "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {separator.join(v.PAINT)}",
         "description": desc,
-        "url": f"https://www.tesla.com/{v.Model}/order/{v.VIN}?postal={zip_code}",
+        "url": f"{get_base_url(search_query.query.region)}/{v.Model}/order/{v.VIN}?postal={search_query.query.zip}",
         "color": None
     }
 
     return card
+
+
+def get_base_url(region):
+    base_url = "https://www.tesla.com"
+    if region == "CA":
+        base_url += "/en_CA"
+    return base_url
+
+
+def build_search_url(search_query):
+    return f"{get_base_url(search_query.query.region)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}"
 
 
 def send_message(api_key, search_query, search_results):
@@ -33,7 +44,7 @@ def send_message(api_key, search_query, search_results):
             {
                 "title": f"View all {search_query.query.model.upper()} inventory",
                 "description": "This link will take you to Tesla's inventory search page.",
-                "url": f"https://www.tesla.com/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}",
+                "url": build_search_url(search_query),
                 "color": None
             }
         ]
@@ -43,7 +54,7 @@ def send_message(api_key, search_query, search_results):
         if x == 9:
             break
         msg["embeds"].append(build_vehicle_card(
-            search_results.results[x], search_query.query.zip))
+            search_results.results[x], search_query))
 
     conn = http.client.HTTPSConnection("discord.com")
     payload = json.dumps(msg)
@@ -66,7 +77,7 @@ def send_message_split_results(api_key, search_query, search_results):
             {
                 "title": f"View all {search_query.query.model.upper()} inventory",
                 "description": "This link will take you to Tesla's inventory search page.",
-                "url": f"https://www.tesla.com/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}",
+                "url": build_search_url(search_query),
                 "color": None
             }
         ]
@@ -77,21 +88,21 @@ def send_message_split_results(api_key, search_query, search_results):
             break
 
         msg["embeds"].append(build_vehicle_card(
-            search_results.results.exact[x], search_query.query.zip))
+            search_results.results.exact[x], search_query))
 
     for x in range(total_approximate):
         if len(msg["embeds"]) == 10:
             break
 
         msg["embeds"].append(build_vehicle_card(
-            search_results.results.approximate[x], search_query.query.zip))
+            search_results.results.approximate[x], search_query))
 
     for x in range(total_approximateOutside):
         if len(msg["embeds"]) == 10:
             break
 
         msg["embeds"].append(build_vehicle_card(
-            search_results.results.approximateOutside[x], search_query.query.zip))
+            search_results.results.approximateOutside[x], search_query))
 
     conn = http.client.HTTPSConnection("discord.com")
     payload = json.dumps(msg)

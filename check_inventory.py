@@ -58,8 +58,10 @@ while True:
 
         api_path = "/inventory/api/v1/inventory-results?query=" + \
             urllib.parse.quote_plus(json.dumps(search_query))
-
-        search_url = f'https://www.tesla.com/inventory/{condition}/{model}?arrangeby=phl&zip={zipcode}&range={zip_range}'
+        base_search_url = "https://www.tesla.com"
+        if region == "CA":
+            base_search_url += "/en_CA"
+        search_url = f'{base_search_url}/inventory/{condition}/{model}?arrangeby=phl&zip={zipcode}&range={zip_range}'
         conn = http.client.HTTPSConnection("www.tesla.com")
         payload = ''
         headers = {
