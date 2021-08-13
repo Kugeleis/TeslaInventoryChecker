@@ -71,8 +71,8 @@ while True:
             'dnt': '1'
         }
 
-        conn.request("GET", api_path, payload, headers)
         try:
+            conn.request("GET", api_path, payload, headers)
             res = conn.getresponse()
             data = res.read()
             search_results = json.loads(
