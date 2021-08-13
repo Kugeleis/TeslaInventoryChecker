@@ -29,13 +29,18 @@ model = config['Inventory']['model']
 region = config['Inventory']['region']
 market = config['DEFAULT']['market']
 zipcodes = config['Inventory']['zip'].split(",")
+coordinates = config['Inventory']['lat_long'].split(";")
 zip_range = config['DEFAULT']['range']
 condition = config['DEFAULT']['condition']
 
 while True:
-    for zipcode in zipcodes:
+    for i in range(len(zipcodes)):
+        zipcode = zipcodes[i]
         print(
             f'Searching for {condition} Tesla {model.upper()} within {zip_range} miles of {zipcode}')
+
+        lat = float(coordinates[i].split(",")[0])
+        lng = float(coordinates[i].split(",")[1])
 
         search_query = {
             "query": {
@@ -47,6 +52,8 @@ while True:
                 "market": market,
                 "language": "en",
                 "super_region": config['DEFAULT']['super_region'],
+                "lng": lng,
+                "lat": lat,
                 "zip": zipcode,
                 "range": int(zip_range),
                 "region": region

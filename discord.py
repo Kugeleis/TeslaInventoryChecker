@@ -21,6 +21,9 @@ def build_vehicle_card(v, search_query):
         "color": None
     }
 
+    if v.StateProvince != search_query.query.region:
+        print(
+            f"Vehicle found does not belong in current State/Region.\n---\n\n{json.dumps(v)}\n\n---")
     return card
 
 
