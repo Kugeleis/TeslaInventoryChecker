@@ -27,6 +27,7 @@ config = configparser.ConfigParser()
 config.read(config_file)
 model = config['Inventory']['model']
 region = config['Inventory']['region']
+market = config['DEFAULT']['market']
 zipcodes = config['Inventory']['zip'].split(",")
 zip_range = config['DEFAULT']['range']
 condition = config['DEFAULT']['condition']
@@ -43,7 +44,7 @@ while True:
                 "options": {},
                 "arrangeby": "Price",
                 "order": "asc",
-                "market": config['DEFAULT']['market'],
+                "market": market,
                 "language": "en",
                 "super_region": config['DEFAULT']['super_region'],
                 "zip": zipcode,
@@ -59,7 +60,7 @@ while True:
         api_path = "/inventory/api/v1/inventory-results?query=" + \
             urllib.parse.quote_plus(json.dumps(search_query))
         base_search_url = "https://www.tesla.com"
-        if region == "CA":
+        if market == "CA":
             base_search_url += "/en_CA"
         search_url = f'{base_search_url}/inventory/{condition}/{model}?arrangeby=phl&zip={zipcode}&range={zip_range}'
         conn = http.client.HTTPSConnection("www.tesla.com")

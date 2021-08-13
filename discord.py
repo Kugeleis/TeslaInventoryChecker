@@ -17,22 +17,22 @@ def build_vehicle_card(v, search_query):
     card = {
         "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {separator.join(v.PAINT)}",
         "description": desc,
-        "url": f"{get_base_url(search_query.query.region)}/{v.Model}/order/{v.VIN}?postal={search_query.query.zip}",
+        "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?postal={search_query.query.zip}",
         "color": None
     }
 
     return card
 
 
-def get_base_url(region):
+def get_base_url(market):
     base_url = "https://www.tesla.com"
-    if region == "CA":
+    if market == "CA":
         base_url += "/en_CA"
     return base_url
 
 
 def build_search_url(search_query):
-    return f"{get_base_url(search_query.query.region)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}"
+    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}"
 
 
 def send_message(api_key, search_query, search_results):
