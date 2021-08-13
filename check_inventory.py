@@ -72,10 +72,14 @@ while True:
         }
 
         conn.request("GET", api_path, payload, headers)
-        res = conn.getresponse()
-        data = res.read()
-        search_results = json.loads(
-            data, object_hook=lambda d: SimpleNamespace(**d))
+        try:
+            res = conn.getresponse()
+            data = res.read()
+            search_results = json.loads(
+                data, object_hook=lambda d: SimpleNamespace(**d))
+        except Exception as e:
+            print(f'Error calling Tesla API\n{e}')
+            continue
 
         total_matches = int(search_results.total_matches_found)
         total_exact = 0
