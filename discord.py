@@ -1,41 +1,32 @@
 import json
 import http.client
-
-separator = ", "
-
-def list_to_string(l):
-    if type(l) is not list:
-        return ""
-    
-    try:
-        return separator.join(l)
-    except Exception is e:
-        print(f'Failed to join list - {l}. Error: {str(e)}')
-        return ""
+import urllib
+import helper
 
 def build_vehicle_card(v, search_query):
     desc = f"→ VIN: {v.VIN}\n"
     try:
         desc += f"→ Odometer: {str(v.Odometer)} {v.OdometerType}\n"
         desc += f"→ Price: {str(v.Price)}\n"
-        desc += f"→ Sticker Price: {str(v.MonroneyPrice)}\n"
-        desc += f"→ Exterior: {list_to_string(v.PAINT)}\n"
-        desc += f"→ Interior: {list_to_string(v.INTERIOR)}\n"
-        desc += f"→ Additional Options: {list_to_string(v.ADL_OPTS)}\n"
+        if v.CountryCode == "US":
+            desc += f"→ Sticker Price: {str(v.MonroneyPrice)}\n"
+        desc += f"→ Exterior: {helper.list_to_string(v.PAINT)}\n"
+        desc += f"→ Interior: {helper.list_to_string(v.INTERIOR)}\n"
+        desc += f"→ Additional Options: {helper.list_to_string(v.ADL_OPTS)}\n"
         desc += f"→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
-    except Exception is e:
+    except Exception as e:
         print(f'error building description for vehicle - {str(e)}')
 
     card = {
-        "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {list_to_string(v.PAINT)}",
+        "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {helper.list_to_string(v.PAINT)}",
         "description": desc,
-        "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?postal={search_query.query.zip}",
+        "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?postal={urllib.parse.quote(search_query.query.zip)}",
         "color": None
     }
 
     if v.StateProvince != search_query.query.region:
         print(
-            f"Vehicle found does not belong in current State/Region.\n---\n\n{json.dumps(v)}\n\n---")
+            f"Vehicle found does not belong in current State/Region.\n---\n\n{v}\n\n---")
     return card
 
 
@@ -47,7 +38,7 @@ def get_base_url(market):
 
 
 def build_search_url(search_query):
-    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}"
+    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={urllib.parse.quote(search_query.query.zip)}&range={str(search_query.query.range)}"
 
 def send_test_message(api_key, message):
     msg = {
@@ -62,7 +53,8 @@ def send_test_message(api_key, message):
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
     print(f'Discord Message Send Status: {res.status} {res.reason}')
-    if (res.status > 300):
+    if (res.status != 204):
+        print(payload)
         raise ValueError('Discord Message Failed to send. Please check your configuration.')
 
 def send_message(api_key, search_query, search_results):
@@ -83,8 +75,10 @@ def send_message(api_key, search_query, search_results):
     for x in range(total_matches):
         if x == 9:
             break
-        msg["embeds"].append(build_vehicle_card(
-            search_results.results[x], search_query))
+        try:
+            msg["embeds"].append(build_vehicle_card(search_results.results[x], search_query))
+        except Exception as e:
+            print(f'Error adding vehicle data to search - {str(e)}')
 
     conn = http.client.HTTPSConnection("discord.com")
     payload = json.dumps(msg)
@@ -94,6 +88,9 @@ def send_message(api_key, search_query, search_results):
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
     print(f'Discord Message Send Status: {res.status} {res.reason}')
+    if res.status != 204:
+        print("Failed to send message to Discord")
+        print(payload)
 
 def send_message_split_results(api_key, search_query, search_results):
     total_exact = len(search_results.results.exact)
@@ -142,3 +139,6 @@ def send_message_split_results(api_key, search_query, search_results):
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
     print(f'Discord Message Send Status: {res.status} {res.reason}')
+    if res.status != 204:
+        print("Failed to send message to Discord")
+        print(payload)

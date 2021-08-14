@@ -6,6 +6,7 @@ import http.client
 import urllib
 import time
 import discord
+import localmode
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -17,6 +18,8 @@ parser.add_argument(
     '-r', '--repeat', help='Repeat this every x seconds. Suggested = 60')
 parser.add_argument(
     '-dt', '--discordtest', action='store_true', help='Sends test message to Discord on start-up.')
+parser.add_argument(
+    '-l', '--localonly', action='store_true', help='Run this script locally without any Discord integration. Keep an eye out on terminal logs.')
 
 args = parser.parse_args()
 
@@ -113,17 +116,25 @@ while True:
         try:
             if total_matches > 0:
                 print(
-                    f"Inventory Found - {str(total_matches)} {condition} {model} found at {datetime.now()}")
-                discord.send_message(config['Discord']['api'], json.loads(
+                    f"++ Inventory Found - {str(total_matches)} {condition} {model} found at {datetime.now()}")
+                if args.localonly:
+                    localmode.send_message(json.loads(
+                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                else:
+                    discord.send_message(config['Discord']['api'], json.loads(
                     (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
             elif total_split_matches > 0:
                 print(
-                    f"Split Inventory Found - {str(total_split_matches)} {condition} {model} found at {datetime.now()}")
-                discord.send_message_split_results(config['Discord']['api'], json.loads(
+                    f"++ Split Inventory Found - {str(total_split_matches)} {condition} {model} found at {datetime.now()}")
+                if args.localonly:
+                    localmode.send_message(json.loads(
+                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                else:
+                    discord.send_message_split_results(config['Discord']['api'], json.loads(
                     (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
             else:
                 print(
-                    f"No {condition} {model} vehicles were found at {datetime.now()}")
+                    f"> No {condition} {model.upper()} vehicles were found at {datetime.now()}")
         except Exception as e:
             print(f"Error sending message to discord:\n{str(e)}\n---")
             continue
