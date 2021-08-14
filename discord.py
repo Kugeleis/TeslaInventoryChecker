@@ -3,19 +3,31 @@ import http.client
 
 separator = ", "
 
+def list_to_string(l):
+    if type(l) is not list:
+        return ""
+    
+    try:
+        return separator.join(l)
+    except Exception is e:
+        print(f'Failed to join list - {l}. Error: {str(e)}')
+        return ""
 
 def build_vehicle_card(v, search_query):
     desc = f"→ VIN: {v.VIN}\n"
-    desc += f"→ Odometer: {str(v.Odometer)} {v.OdometerType}\n"
-    desc += f"→ Price: {str(v.Price)}\n"
-    desc += f"→ Sticker Price: {str(v.MonroneyPrice)}\n"
-    desc += f"→ Exterior: {separator.join(v.PAINT)}\n"
-    desc += f"→ Interior: {separator.join(v.INTERIOR)}\n"
-    desc += f"→ Additional Options: {separator.join(v.ADL_OPTS)}\n"
-    desc += f"→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
+    try:
+        desc += f"→ Odometer: {str(v.Odometer)} {v.OdometerType}\n"
+        desc += f"→ Price: {str(v.Price)}\n"
+        desc += f"→ Sticker Price: {str(v.MonroneyPrice)}\n"
+        desc += f"→ Exterior: {list_to_string(v.PAINT)}\n"
+        desc += f"→ Interior: {list_to_string(v.INTERIOR)}\n"
+        desc += f"→ Additional Options: {list_to_string(v.ADL_OPTS)}\n"
+        desc += f"→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
+    except Exception is e:
+        print(f'error building description for vehicle - {str(e)}')
 
     card = {
-        "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {separator.join(v.PAINT)}",
+        "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {list_to_string(v.PAINT)}",
         "description": desc,
         "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?postal={search_query.query.zip}",
         "color": None
@@ -37,6 +49,21 @@ def get_base_url(market):
 def build_search_url(search_query):
     return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={search_query.query.zip}&range={str(search_query.query.range)}"
 
+def send_test_message(api_key, message):
+    msg = {
+        "content": message
+    }
+
+    conn = http.client.HTTPSConnection("discord.com")
+    payload = json.dumps(msg)
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    conn.request("POST", api_key, payload, headers)
+    res = conn.getresponse()
+    print(f'Discord Message Send Status: {res.status} {res.reason}')
+    if (res.status > 300):
+        raise ValueError('Discord Message Failed to send. Please check your configuration.')
 
 def send_message(api_key, search_query, search_results):
     total_matches = int(search_results.total_matches_found)
@@ -66,7 +93,7 @@ def send_message(api_key, search_query, search_results):
     }
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
-
+    print(f'Discord Message Send Status: {res.status} {res.reason}')
 
 def send_message_split_results(api_key, search_query, search_results):
     total_exact = len(search_results.results.exact)
@@ -114,3 +141,4 @@ def send_message_split_results(api_key, search_query, search_results):
     }
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
+    print(f'Discord Message Send Status: {res.status} {res.reason}')

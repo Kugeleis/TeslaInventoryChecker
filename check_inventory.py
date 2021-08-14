@@ -15,6 +15,8 @@ parser.add_argument(
     '-c', '--config', help='Override Configuration File by providing file name in current directory, e.g. m3.ini')
 parser.add_argument(
     '-r', '--repeat', help='Repeat this every x seconds. Suggested = 60')
+parser.add_argument(
+    '-dt', '--discordtest', action='store_true', help='Sends test message to Discord on start-up.')
 
 args = parser.parse_args()
 
@@ -32,6 +34,9 @@ zipcodes = config['Inventory']['zip'].split(",")
 coordinates = config['Inventory']['lat_long'].split(";")
 zip_range = config['DEFAULT']['range']
 condition = config['DEFAULT']['condition']
+
+if args.discordtest:
+    discord.send_test_message(config['Discord']['api'], "Initiating Tesla Vehicle Inventory Search ...")
 
 while True:
     for i in range(len(zipcodes)):
@@ -85,7 +90,7 @@ while True:
             search_results = json.loads(
                 data, object_hook=lambda d: SimpleNamespace(**d))
         except Exception as e:
-            print(f'Error calling Tesla API\n{e}')
+            print(f'Error calling Tesla API\n{str(e)}')
             continue
 
         total_matches = int(search_results.total_matches_found)
@@ -93,27 +98,35 @@ while True:
         total_approximate = 0
         total_approximateOutside = 0
 
-        if type(search_results.results) is not list:
-            total_exact = len(search_results.results.exact)
-            total_approximate = len(search_results.results.approximate)
-            total_approximateOutside = len(
-                search_results.results.approximateOutside)
+        try:
+            if type(search_results.results) is not list:
+                total_exact = len(search_results.results.exact)
+                total_approximate = len(search_results.results.approximate)
+                total_approximateOutside = len(
+                    search_results.results.approximateOutside)
 
-        total_split_matches = total_exact + total_approximate + total_approximateOutside
+            total_split_matches = total_exact + total_approximate + total_approximateOutside
+        except:
+            print(f"Error parsing Tesla Response:\n{str(e)}\n---")
+            continue
 
-        if total_matches > 0:
-            print(
-                f"Inventory Found - {str(total_matches)} {condition} {model} found at {datetime.now()}")
-            discord.send_message(config['Discord']['api'], json.loads(
-                (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
-        elif total_split_matches > 0:
-            print(
-                f"Split Inventory Found - {str(total_split_matches)} {condition} {model} found at {datetime.now()}")
-            discord.send_message_split_results(config['Discord']['api'], json.loads(
-                (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
-        else:
-            print(
-                f"No {condition} {model} vehicles were found at {datetime.now()}")
+        try:
+            if total_matches > 0:
+                print(
+                    f"Inventory Found - {str(total_matches)} {condition} {model} found at {datetime.now()}")
+                discord.send_message(config['Discord']['api'], json.loads(
+                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+            elif total_split_matches > 0:
+                print(
+                    f"Split Inventory Found - {str(total_split_matches)} {condition} {model} found at {datetime.now()}")
+                discord.send_message_split_results(config['Discord']['api'], json.loads(
+                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+            else:
+                print(
+                    f"No {condition} {model} vehicles were found at {datetime.now()}")
+        except Exception as e:
+            print(f"Error sending message to discord:\n{str(e)}\n---")
+            continue
 
     if args.repeat == None:
         break
