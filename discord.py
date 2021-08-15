@@ -10,10 +10,24 @@ def build_vehicle_card(v, search_query):
         desc += f"→ Price: {str(v.Price)}\n"
         if v.CountryCode == "US":
             desc += f"→ Sticker Price: {str(v.MonroneyPrice)}\n"
-        desc += f"→ Exterior: {helper.list_to_string(v.PAINT)}\n"
+        desc += f"\n→ Exterior: {helper.list_to_string(v.PAINT)}\n"
         desc += f"→ Interior: {helper.list_to_string(v.INTERIOR)}\n"
-        desc += f"→ Additional Options: {helper.list_to_string(v.ADL_OPTS)}\n"
-        desc += f"→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
+        try:
+            desc += f"→ Wheels: {helper.list_to_string(v.WHEELS)}\n"
+            desc += f"→ Additional Options: {helper.list_to_string(v.ADL_OPTS)}\n"
+            desc += f"→ Autopilot: {helper.list_to_string(v.AUTOPILOT)}\n"
+            
+            if v.InTransit: desc += f"\n→ In-Transit"
+            if v.IsAvailableForMatch is not True: desc += f"\n→ Vehicle Is NOT Available For Match"
+            if v.IsDemo: desc += f"\n→ Demo Vehicle"
+            if v.IsSoftMatched: f"\n→ Already Soft Matched"
+            desc += f"\n→ Listing Type: {v.ListingType}\n"
+            desc += f"→ Document Sync Date: {v.DocumentSyncDate}\n"
+            desc += f"→ Actual General Availability In-Date: {v.ActualGAInDate}\n"
+            if v.NeedsReview: desc += f"→ Listing/Vehicle Needs Review\n"
+        except Exception as ex:
+            print(f"Extra data points failed for current vehicle - {str(ex)}")
+        desc += f"\n→ Location: {v.City}, {v.StateProvince}, {v.CountryCode}"
     except Exception as e:
         print(f'error building description for vehicle - {str(e)}')
 

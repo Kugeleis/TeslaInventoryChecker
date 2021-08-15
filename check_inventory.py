@@ -7,6 +7,7 @@ import urllib
 import time
 import discord
 import localmode
+import geolocator
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -34,9 +35,20 @@ model = config['Inventory']['model']
 region = config['Inventory']['region']
 market = config['DEFAULT']['market']
 zipcodes = config['Inventory']['zip'].split(",")
-coordinates = config['Inventory']['lat_long'].split(";")
 zip_range = config['DEFAULT']['range']
 condition = config['DEFAULT']['condition']
+
+# Get Lat/Long Coordinates from Tesla API if one isn't present
+if 'lat_long' in config['Inventory']:
+    coordinates = config['Inventory']['lat_long'].split(";")
+else:
+    coordinates = []
+    geo_token = geolocator.get_token()
+    for i in range(len(zipcodes)):
+        zipcode = zipcodes[i]
+        geo_data = geolocator.decode_zip(geo_token, zipcode, market)
+        coordinates.append(f"{str(geo_data.latitude)},{str(geo_data.longitude)}")
+        print(f"Location Co-ordinates added for {zipcode} = {coordinates[i]}")
 
 if args.discordtest:
     discord.send_test_message(config['Discord']['api'], "Initiating Tesla Vehicle Inventory Search ...")
