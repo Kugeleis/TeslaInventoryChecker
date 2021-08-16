@@ -22,8 +22,8 @@ def build_vehicle_card(v, search_query):
             if v.IsDemo: desc += f"\n→ Demo Vehicle"
             if v.IsSoftMatched: f"\n→ Already Soft Matched"
             desc += f"\n→ Listing Type: {v.ListingType}\n"
-            desc += f"→ Document Sync Date: {v.DocumentSyncDate}\n"
-            desc += f"→ Actual General Availability In-Date: {v.ActualGAInDate}\n"
+            desc += f"→ Document Sync Date: {helper.try_parse_date_time(v.DocumentSyncDate, 0)}\n"
+            desc += f"→ Factory Gate Date: {helper.try_parse_date_time(v.ActualGAInDate, 0)}\n"
             if v.NeedsReview: desc += f"→ Listing/Vehicle Needs Review\n"
         except Exception as ex:
             print(f"Extra data points failed for current vehicle - {str(ex)}")
@@ -34,7 +34,7 @@ def build_vehicle_card(v, search_query):
     card = {
         "title": f"{v.Year} {v.Model.upper()} {v.TrimName} - {helper.list_to_string(v.PAINT)}",
         "description": desc,
-        "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?postal={urllib.parse.quote(search_query.query.zip)}",
+        "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?referral=christina37902&postal={urllib.parse.quote(search_query.query.zip)}",
         "color": None
     }
 
@@ -52,7 +52,7 @@ def get_base_url(market):
 
 
 def build_search_url(search_query):
-    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&zip={urllib.parse.quote(search_query.query.zip)}&range={str(search_query.query.range)}"
+    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&referral=christina37902&zip={urllib.parse.quote(search_query.query.zip)}&range={str(search_query.query.range)}"
 
 def send_test_message(api_key, message):
     msg = {
