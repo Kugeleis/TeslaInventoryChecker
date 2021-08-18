@@ -13,13 +13,18 @@ Here's a temporary invite link to see this in action: https://discord.gg/2T8wZ25
 ### Instructions
 
 1. Download & Install Python3 for your OS: https://www.python.org/downloads/
-2. Clone this repository using your Git Client or download accordingly
-3. Update `config.ini` file with your desired configuration
-   - for lat_long, if you do not have that handy, you may comment out that line by placing `#` in the beginning of that line. The script will call Tesla API to get the Geolocation.
-      ```
-      #lat_long =
-      ```
-4. Run the python file in Terminal / Command Prompt with any customizations you want:
+2. Install the following pre-requisite:
+   ```bash
+   sudo pip3 install tinydb
+   ```
+3. Clone this repository using your Git Client or download accordingly
+4. Update `config.ini` file with your desired configuration
+   - for lat_long, if you do not have that handy, you may comment out that line by placing `#` in the beginning of that line. The script will call Tesla API to get the Geolocation. This API can error out at times, so it is best to update the values once you get them in the terminal logs.
+     ```
+     #lat_long =
+     ```
+5. Run the python file in Terminal / Command Prompt with any customizations you want:
+
    ```bash
    // Example 1: with default config file and repeat option every 60 seconds
    python3 check_inventory.py -r 60
@@ -36,6 +41,7 @@ For Discord API, create a webhook on your respective server/channel:
 4. If you'd prefer to test your webhook, use `-dt` argument when running this script.
 
 To be notified locally in Terminal (and not on Discord), use the `-l` or `-localonly` argument:
+
 ```bash
 python3 check_inventory.py -r 60 -l
 ```
@@ -46,5 +52,7 @@ For any help or issues, feel free to reach out on Discord, Social Media: @NoorBy
 
 If you'd like to donate to this effort & buy me a coffee or something, it will be very much appreciated but not expected at all.
 
-- Ko-Fi - https://ko-fi.com/tnoor
-- Venmo/Cash - $TNOOR
+- Venmo: $TNOOR
+- Cash: https://cash.app/$TNOOR
+- Paypal: https://paypal.me/tnoor
+- Ko-Fi: https://ko-fi.com/tnoor

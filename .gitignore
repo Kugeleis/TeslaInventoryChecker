@@ -115,3 +115,6 @@ dmypy.json
 
 # Personal Config
 m*.ini
+
+# Db logs
+*.json

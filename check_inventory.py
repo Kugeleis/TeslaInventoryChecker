@@ -10,6 +10,7 @@ import localmode
 import geolocator
 from datetime import datetime
 from types import SimpleNamespace
+from tinydb import TinyDB, Query
 
 parser = argparse.ArgumentParser(
     description='Search and get notified for Tesla Inventory')
@@ -56,24 +57,40 @@ else:
                 continue
 
         for i in range(len(zipcodes)):
-            for i in range(10):
+            for j in range(10):
                 try:
                     zipcode = zipcodes[i]
                     print(f'Getting co-ordinates for {zipcode}')
-                    geo_data = geolocator.decode_zip(geo_token, zipcode, market)
-                    coordinates.append(f"{str(geo_data.latitude)},{str(geo_data.longitude)}")
-                    print(f"Location Co-ordinates added for {zipcode} = {coordinates[i]}")
+                    geo_data = geolocator.decode_zip(
+                        geo_token, zipcode, market)
+                    coordinates.append(
+                        f"{str(geo_data.latitude)},{str(geo_data.longitude)}")
+                    print(
+                        f"Location Co-ordinates added for {zipcode} = {coordinates[i]}")
                     break
-                except:
+                except Exception as e:
                     time.sleep(15)
-                    print(f"Exception getting geo-location for {zipcodes[i]} - {e}")
+                    print(
+                        f"Exception getting geo-location for {zipcodes[i]} - {e}")
                     continue
     except Exception as e:
         print(f"Exception getting geo-location from Tesla - {e}")
-        discord.send_test_message(config['Discord']['api'], f"Error running script for {region}")
+        discord.send_test_message(
+            config['Discord']['api'], f"Error getting geo co-ordinates for {region}")
 
 if args.discordtest:
-    discord.send_test_message(config['Discord']['api'], "Initiating Tesla Vehicle Inventory Search ...")
+    discord.send_test_message(
+        config['Discord']['api'], "Initiating Tesla Vehicle Inventory Search ...")
+
+# Initiate the db files
+dbs = []
+for i in range(len(zipcodes)):
+    db_file = os.path.join(current_dir, f'{zipcodes[i]}.json')
+    if os.path.exists(db_file) is False:
+        print(f'Creating local db for {zipcodes[i]}')
+        open(db_file, "w").close
+
+    dbs.append(TinyDB(db_file))
 
 while True:
     for i in range(len(zipcodes)):
@@ -148,27 +165,35 @@ while True:
             continue
 
         try:
+            vehicle = Query()
             if total_matches > 0:
                 print(
                     f"++ Inventory Found - {str(total_matches)} {condition} {model} found at {datetime.now()}")
                 if args.localonly:
                     localmode.send_message(json.loads(
-                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                        (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
                 else:
                     discord.send_message(config['Discord']['api'], json.loads(
-                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                        (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results.results, dbs[i])
             elif total_split_matches > 0:
                 print(
                     f"++ Split Inventory Found - {str(total_split_matches)} {condition} {model} found at {datetime.now()}")
                 if args.localonly:
                     localmode.send_message(json.loads(
-                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                        (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
                 else:
-                    discord.send_message_split_results(config['Discord']['api'], json.loads(
-                    (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), search_results)
+                    vehicles = []
+                    vehicles.append(search_results.results.exact[:])
+                    vehicles.append(search_results.results.approximate[:])
+                    vehicles.append(
+                        search_results.results.approximateOutside[:])
+                    discord.send_message(config['Discord']['api'], json.loads(
+                        (json.dumps(search_query)), object_hook=lambda d: SimpleNamespace(**d)), vehicles, dbs[i])
             else:
                 print(
                     f"> No {condition} {model.upper()} vehicles were found at {datetime.now()}")
+                dbs[i].update({"isAvailable": False},
+                              vehicle.isAvailable == True)
         except Exception as e:
             print(f"Error sending message to discord:\n{str(e)}\n---")
             continue
