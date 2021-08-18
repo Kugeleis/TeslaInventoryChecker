@@ -42,13 +42,35 @@ condition = config['DEFAULT']['condition']
 if 'lat_long' in config['Inventory']:
     coordinates = config['Inventory']['lat_long'].split(";")
 else:
+    print('Getting co-ordinates from Tesla API ...')
     coordinates = []
-    geo_token = geolocator.get_token()
-    for i in range(len(zipcodes)):
-        zipcode = zipcodes[i]
-        geo_data = geolocator.decode_zip(geo_token, zipcode, market)
-        coordinates.append(f"{str(geo_data.latitude)},{str(geo_data.longitude)}")
-        print(f"Location Co-ordinates added for {zipcode} = {coordinates[i]}")
+    try:
+        for i in range(10):
+            try:
+                print('Getting Tesla API Token')
+                geo_token = geolocator.get_token()
+                break
+            except Exception as e:
+                time.sleep(15)
+                print(f"Exception getting geo-location token - {e}")
+                continue
+
+        for i in range(len(zipcodes)):
+            for i in range(10):
+                try:
+                    zipcode = zipcodes[i]
+                    print(f'Getting co-ordinates for {zipcode}')
+                    geo_data = geolocator.decode_zip(geo_token, zipcode, market)
+                    coordinates.append(f"{str(geo_data.latitude)},{str(geo_data.longitude)}")
+                    print(f"Location Co-ordinates added for {zipcode} = {coordinates[i]}")
+                    break
+                except:
+                    time.sleep(15)
+                    print(f"Exception getting geo-location for {zipcodes[i]} - {e}")
+                    continue
+    except Exception as e:
+        print(f"Exception getting geo-location from Tesla - {e}")
+        discord.send_test_message(config['Discord']['api'], f"Error running script for {region}")
 
 if args.discordtest:
     discord.send_test_message(config['Discord']['api'], "Initiating Tesla Vehicle Inventory Search ...")
