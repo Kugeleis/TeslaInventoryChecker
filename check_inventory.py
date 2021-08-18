@@ -192,8 +192,7 @@ while True:
             else:
                 print(
                     f"> No {condition} {model.upper()} vehicles were found at {datetime.now()}")
-                dbs[i].update({"isAvailable": False},
-                              vehicle.isAvailable == True)
+                dbs[i].update({"isAvailable": False}, vehicle.isAvailable == True)
         except Exception as e:
             print(f"Error sending message to discord:\n{str(e)}\n---")
             continue

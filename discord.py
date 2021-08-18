@@ -158,11 +158,11 @@ def parse_vehicle_results(vehicles, db):
         if len(vehicle_matches) > 0:
             print(f'-- Vehicle was previously detected - {vin}')
             if vehicle_matches[0]["isAvailable"] == False:
-                db.upsert({"vin": vin, "isAvailable": True})
+                db.upsert({"vin": vin, "isAvailable": True}, vehicle.vin == vin)
                 new_matches.append(vehicles[x])
         else:
             print(f"++ New Vehicle found - {vin}")
-            db.upsert({"vin": vin, "isAvailable": True})
+            db.upsert({"vin": vin, "isAvailable": True}, vehicle.vin == vin)
             new_matches.append(vehicles[x])
     return new_matches
 
