@@ -85,7 +85,7 @@ if args.discordtest:
 # Initiate the db files
 dbs = []
 for i in range(len(zipcodes)):
-    db_file = os.path.join(current_dir, f'{zipcodes[i]}.json')
+    db_file = os.path.join(current_dir, 'db', model, f'{market}-{region}-{zipcodes[i]}.json')
     if os.path.exists(db_file) is False:
         print(f'Creating local db for {zipcodes[i]}')
         open(db_file, "w").close

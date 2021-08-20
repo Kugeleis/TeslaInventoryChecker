@@ -15,7 +15,7 @@ Here's a temporary invite link to see this in action: https://discord.gg/2T8wZ25
 1. Download & Install Python3 for your OS: https://www.python.org/downloads/
 2. Install the following pre-requisite:
    ```bash
-   sudo pip3 install tinydb
+   pip install tinydb
    ```
 3. Clone this repository using your Git Client or download accordingly
 4. Update `config.ini` file with your desired configuration
@@ -27,10 +27,10 @@ Here's a temporary invite link to see this in action: https://discord.gg/2T8wZ25
 
    ```bash
    // Example 1: with default config file and repeat option every 60 seconds
-   python3 check_inventory.py -r 60
+   python check_inventory.py -r 60
 
    // Example 2: with custom config file m3.ini and repeat option every 60 seconds
-   python3 check_inventory.py -c m3.ini -r 60
+   python check_inventory.py -c m3.ini -r 60
    ```
 
 For Discord API, create a webhook on your respective server/channel:
@@ -43,7 +43,7 @@ For Discord API, create a webhook on your respective server/channel:
 To be notified locally in Terminal (and not on Discord), use the `-l` or `-localonly` argument:
 
 ```bash
-python3 check_inventory.py -r 60 -l
+python check_inventory.py -r 60 -l
 ```
 
 ### Support

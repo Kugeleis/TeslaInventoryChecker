@@ -3,8 +3,9 @@ import http.client
 import urllib
 import helper
 import time
-from tinydb import TinyDB, Query
+from tinydb import Query
 
+referral_code = "christina37902"
 
 def get_model_name(model):
     if model == "m3":
@@ -56,14 +57,14 @@ def build_vehicle_card(v, search_query):
         {
             "title": "View Listing Page",
             "description": desc,
-            "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?referral=christina37902&postal={urllib.parse.quote(search_query.query.zip)}",
+            "url": f"{get_base_url(search_query.query.market)}/{v.Model}/order/{v.VIN}?referral={referral_code}&postal={urllib.parse.quote(search_query.query.zip)}",
             "footer": {
                 "text": "Note: If this link redirects you to the inventory search page, the vehicle is no longer available."
             }
         },
         {
             "title": f"Reserve this {helper.list_to_string(v.PAINT)} {v.Model.upper()} {v.TrimName}",
-            "url": f"{get_base_url(search_query.query.market)}/{get_model_name(v.Model)}/order/{v.VIN}?referral=christina37902&postal={urllib.parse.quote(search_query.query.zip)}#payment",
+            "url": f"{get_base_url(search_query.query.market)}/{get_model_name(v.Model)}/order/{v.VIN}?referral={referral_code}&postal={urllib.parse.quote(search_query.query.zip)}#payment",
             "footer": {
                 "text": "Note: If this link returns an error, this vehicle is no longer available. Good luck!"
             }
@@ -86,7 +87,7 @@ def get_base_url(market):
 
 
 def build_search_url(search_query):
-    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&referral=christina37902&zip={urllib.parse.quote(search_query.query.zip)}&range={str(search_query.query.range)}"
+    return f"{get_base_url(search_query.query.market)}/inventory/{search_query.query.condition}/{search_query.query.model}?arrangeby=phl&referral={referral_code}&zip={urllib.parse.quote(search_query.query.zip)}&range={str(search_query.query.range)}"
 
 
 def send_test_message(api_key, message):
@@ -128,7 +129,7 @@ def send_search_listing(api_key, search_query, total_matches):
     }
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
-    print(f'Discord Message Send Status: {res.status} {res.reason}')
+    print(f'Discord Message (Search Listing) Send Status: {res.status} {res.reason}')
     if res.status != 204:
         print("Failed to send message to Discord")
         print(payload)
@@ -142,7 +143,7 @@ def send_vehicle_found_message(api_key, search_query, vehicle):
     }
     conn.request("POST", api_key, payload, headers)
     res = conn.getresponse()
-    print(f'Discord Message Send Status: {res.status} {res.reason}')
+    print(f'Discord Message (VIN: {vehicle.VIN}) Send Status: {res.status} {res.reason}')
     if res.status != 204:
         print("Failed to send message to Discord")
         print(payload)
@@ -156,14 +157,15 @@ def parse_vehicle_results(vehicles, db):
         vehicle = Query()
         vehicle_matches = db.search(vehicle.vin == vin)
         if len(vehicle_matches) > 0:
-            print(f'-- Vehicle was previously detected - {vin}')
+            print(f'-- Vehicle was previously detected - {vehicle_matches}')
             if vehicle_matches[0]["isAvailable"] == False:
-                db.upsert({"vin": vin, "isAvailable": True}, vehicle.vin == vin)
+                db.update(set("isAvailable", True), vehicle.vin == vin)
                 new_matches.append(vehicles[x])
         else:
             print(f"++ New Vehicle found - {vin}")
             db.upsert({"vin": vin, "isAvailable": True}, vehicle.vin == vin)
             new_matches.append(vehicles[x])
+    print(f'total new matches found - {str(len(new_matches))}')
     return new_matches
 
 
