@@ -6,7 +6,7 @@ This attempts to replicate the same search performed on Tesla's website but with
 
 ### Discord
 
-Here's a temporary invite link to see this in action: https://discord.gg/2T8wZ25z
+Here's a temporary invite link to see this in action: https://discord.gg/u2r6VVqVpw
 
 (Please message me if this expires and you would like to join)
 
